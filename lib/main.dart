@@ -1,5 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Daily use
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+const api_key = "AIzaSyAaC-LPg5kZOg8Z6tsY8otswHL_wVmSP8E";
+
+// Access the API key as an environment variable
+void initialize() {
+  final apiKey = Platform.environment[api_key];
+  if(apiKey == null) {
+    print('No \$API_KEY environment variable');
+    exit(1);
+  }
+  final model = GenerativeModel(model: 'MODEL_NAME', apiKey: apiKey);
+}
 
 void main() {
   runApp(MyApp());
@@ -10,7 +26,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-        primaryColor: Colors.red,
+        primaryColor: Colors.blue,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.blue,
+        ),
       ),
       home: PaginaPrincipal(),
     );
@@ -65,37 +84,72 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
     }
   }
 
+  Future<void> generarEcuacion() async {
+    // API endpoint for the Google Gemini Pro model
+    final url = Uri.parse('https://vertexai.googleapis.com/v1/projects/<your-project-id>/locations/<location>/models/<your-model-id>:predict');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $api_key',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'instances': [
+          {
+            'input': 'Generate a mathematical equation for a quadratic function with roots at x = 2 and x = -1', // Prompt to generate equation
+          },
+        ],
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final equation = data['predictions'][0]['content'];
+      print('Equation: $equation');
+
+      // Display the generated equation in your UI
+      // (e.g., using a Text widget)
+    } else {
+      print('Error: ${response.statusCode}');
+      // Handle errors more gracefully, e.g., display an error message to the user
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            GestureDetector(
-              onTap: () async {
-                final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => SeleccionCurso()));
-                if (result != null) {
-                  setState(() {
-                    _curso = result;
-                  });
-                }
-              },
-              child: Icon(Icons.school),
-            ),
-            SizedBox(width: 8.0),
-            GestureDetector(
-              onTap: () async {
-                final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => SeleccionCurso()));
-                if (result != null) {
-                  setState(() {
-                    _curso = result;
-                  });
-                }
-              },
-              child: Text(
-                '$_curso',
-                style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
-              ),
+            Column(
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => SeleccionCurso()));
+                    if (result != null) {
+                      setState(() {
+                        _curso = result;
+                      });
+                    }
+                  },
+                  child: Icon(Icons.school),
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => SeleccionCurso()));
+                    if (result != null) {
+                      setState(() {
+                        _curso = result;
+                      });
+                    }
+                  },
+                  child: Text(
+                    '$_curso',
+                    style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
             ),
             Spacer(),
             _fuegoEncendido
@@ -112,6 +166,12 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
             Text(
               '0',
               style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: Icon(Icons.calculate),
+              onPressed: () {
+                generarEcuacion();
+              },
             ),
           ],
         ),
