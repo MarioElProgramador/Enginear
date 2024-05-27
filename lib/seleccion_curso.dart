@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:enginear/generative_ai.dart';
 import 'package:enginear/pagina_principal.dart';

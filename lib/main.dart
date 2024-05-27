@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart'; // Daily use
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
@@ -19,7 +20,7 @@ void initialize() {
     print('No \$API_KEY environment variable');
     exit(1);
   }
-  final model = GenerativeModel(model: 'MODEL_NAME', apiKey: apiKey);
+  final model = GenerativeModel(model: 'gemini-pro', apiKey: const String.fromEnvironment('api_key'));
 }
 
 void main(){
