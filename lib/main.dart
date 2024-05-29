@@ -10,8 +10,8 @@ import 'package:enginear/generative_ai.dart';
 import 'package:enginear/pagina_principal.dart';
 import 'package:enginear/seleccion_curso.dart';
 
-// const api_key = "AIzaSyAaC-LPg5kZOg8Z6tsY8otswHL_wVmSP8E";
-const api_key = "AIzaSyC8xzJqxO5dzqudep2va6BAJwmsv2hHX_U";
+// const api_key = "AIzaSyC8xzJqxO5dzqudep2va6BAJwmsv2hHX_U"; // Google Studio
+const api_key = "AIzaSyAaC-LPg5kZOg8Z6tsY8otswHL_wVmSP8E";
 
 // Access the API key as an environment variable
 void initialize() {
