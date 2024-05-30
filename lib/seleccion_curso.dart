@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
-
-import 'package:enginear/generative_ai.dart';
-import 'package:enginear/pagina_principal.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SeleccionCurso extends StatelessWidget {
   @override
@@ -19,25 +16,25 @@ class SeleccionCurso extends StatelessWidget {
               ListTile(
                 title: const Text('Algebra lineal'),
                 onTap: () {
-                  Navigator.pop(context, 'Algebra lineal');
+                  _saveCourseSelection('Algebra lineal', context);
                 },
               ),
               ListTile(
                 title: const Text('Geometría'),
                 onTap: () {
-                  Navigator.pop(context, 'Geometría');
+                  _saveCourseSelection('Geometría', context);
                 },
               ),
               ListTile(
                 title: const Text('Cálculo 1'),
                 onTap: () {
-                  Navigator.pop(context, 'Cálculo 1');
+                  _saveCourseSelection('Cálculo 1', context);
                 },
               ),
               ListTile(
                 title: const Text('Cálculo 2'),
                 onTap: () {
-                  Navigator.pop(context, 'Cálculo 2');
+                  _saveCourseSelection('Cálculo 2', context);
                 },
               ),
               ListTile(
@@ -64,5 +61,11 @@ class SeleccionCurso extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _saveCourseSelection(String course, BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('curso', course);
+    Navigator.pop(context, course);
   }
 }

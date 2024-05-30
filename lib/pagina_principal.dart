@@ -1,15 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:shared_preferences/shared_preferences.dart'; // Daily use
-import 'dart:io';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:enginear/seleccion_curso.dart';
 import 'package:enginear/generative_ai.dart' as ai;
-import 'package:enginear/seleccion_curso.dart' as seleccion;
-
-// const api_key = "AIzaSyAaC-LPg5kZOg8Z6tsY8otswHL_wVmSP8E";
-const api_key = "AIzaSyC8xzJqxO5dzqudep2va6BAJwmsv2hHX_U";
 
 class PaginaPrincipal extends StatefulWidget {
   @override
@@ -21,6 +13,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   DateTime _ultimaConexion = DateTime.now();
   bool _fuegoEncendido = false;
   String _curso = "Curso";
+  String _equation = "";
 
   @override
   void initState() {
@@ -59,6 +52,14 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
     }
   }
 
+  Future<void> _generarEcuacion() async {
+    await ai.generarEcuacion().then((equation) {
+      setState(() {
+        _equation = equation ?? "No se pudo generar la ecuación";
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +70,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
               children: [
                 GestureDetector(
                   onTap: () async {
-                    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => seleccion.SeleccionCurso()));
+                    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => SeleccionCurso()));
                     if (result != null) {
                       setState(() {
                         _curso = result;
@@ -80,7 +81,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                 ),
                 GestureDetector(
                   onTap: () async {
-                    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => seleccion.SeleccionCurso()));
+                    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => SeleccionCurso()));
                     if (result != null) {
                       setState(() {
                         _curso = result;
@@ -112,9 +113,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
             ),
             IconButton(
               icon: Icon(Icons.calculate),
-              onPressed: () {
-                ai.generarEcuacion();
-              },
+              onPressed: _generarEcuacion,
             ),
           ],
         ),
@@ -127,15 +126,22 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildSection("Apartado 1", Colors.blue, context),
-            SizedBox(height: 16.0),
-            _buildSection("Apartado 2", Colors.green, context),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSection("Apartado 1", Colors.blue, context),
+              SizedBox(height: 16.0),
+              _buildSection("Apartado 2", Colors.green, context),
+              SizedBox(height: 16.0),
+              Text(
+                _equation,
+                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
       ),
     );

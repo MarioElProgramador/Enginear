@@ -1,41 +1,35 @@
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+Future<String?> generarEcuacion() async {
+  // Cargar las variables de entorno
+  await dotenv.load(fileName: ".env");
+  final apiKey = dotenv.env['API_KEY'];
 
-import 'package:enginear/pagina_principal.dart';
-import 'package:enginear/seleccion_curso.dart';
+  if (apiKey == null || apiKey.isEmpty) {
+    print('API key is missing. Please check your .env file.');
+    return null;
+  }
 
-const api_key = "AIzaSyC8xzJqxO5dzqudep2va6BAJwmsv2hHX_U";
+  // Configurar el modelo de Google Generative AI
+  final model = GenerativeModel(model: "gemini-pro", apiKey: apiKey);
+  final chat = model.startChat();
 
-Future<void> generarEcuacion() async {
-  // API endpoint for the Google Gemini Pro model
-  final url = Uri.parse('https://vertexai.googleapis.com/v1/projects/<your-project-id>/locations/<location>/models/<your-model-id>:predict');
+  try {
+    final prompt = 'Generate a mathematical equation for a quadratic function with roots at x = 2 and x = -1';
+    final response = await chat.sendMessage(Content.text(prompt));
 
-  final response = await http.post(
-    url,
-    headers: {
-      'Authorization': 'Bearer $api_key',
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'instances': [
-        {
-          'input': 'Generate a mathematical equation for a quadratic function with roots at x = 2 and x = -1', // Prompt to generate equation
-        },
-      ],
-    }),
-  );
-
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    final equation = data['predictions'][0]['content'];
-    print('Equation: $equation');
-
-    // Display the generated equation in your UI
-    // (e.g., using a Text widget)
-  } else {
-    print('Error: ${response.statusCode}');
-    // Handle errors more gracefully, e.g., display an error message to the user
+    final equation = response.text;
+    if (equation != null) {
+      print('Equation: $equation');
+      return equation;
+    } else {
+      print('No response from API.');
+      return null;
+    }
+  } catch (e) {
+    print('Error: $e');
+    return null;
   }
 }
+
