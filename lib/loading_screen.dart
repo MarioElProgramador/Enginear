@@ -1,3 +1,5 @@
+// lib/loading_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:enginear/pagina_principal.dart'; // Asegúrate de tener el import correcto
 

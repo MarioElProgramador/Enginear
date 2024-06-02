@@ -1,71 +1,68 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// lib/seleccion_curso.dart
 
-class SeleccionCurso extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:enginear/data_structure.dart';
+import 'package:enginear/seleccion_tema.dart';
+
+class SeleccionCurso extends StatefulWidget {
+  @override
+  _SeleccionCursoState createState() => _SeleccionCursoState();
+}
+
+class _SeleccionCursoState extends State<SeleccionCurso> {
+  String? _selectedMateria;
+  String? _selectedAsignatura;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Selecciona un curso'),
+        title: Text('Seleccionar Curso'),
       ),
-      body: ListView(
-        children: <Widget>[
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           ExpansionTile(
-            title: const Text('Matemáticas'),
-            children: <Widget>[
-              ListTile(
-                title: const Text('Algebra lineal'),
-                onTap: () {
-                  _saveCourseSelection('Algebra lineal', context);
-                },
-              ),
-              ListTile(
-                title: const Text('Geometría'),
-                onTap: () {
-                  _saveCourseSelection('Geometría', context);
-                },
-              ),
-              ListTile(
-                title: const Text('Cálculo 1'),
-                onTap: () {
-                  _saveCourseSelection('Cálculo 1', context);
-                },
-              ),
-              ListTile(
-                title: const Text('Cálculo 2'),
-                onTap: () {
-                  _saveCourseSelection('Cálculo 2', context);
-                },
-              ),
-              ListTile(
-                title: const Text('...'),
-              ),
-            ],
+            title: Text('Matemáticas'),
+            children: _buildAsignaturaList('Matemáticas'),
           ),
           ExpansionTile(
-            title: const Text('Ciencias'),
-            children: <Widget>[
-              ListTile(
-                title: const Text('...'),
-              ),
-            ],
+            title: Text('Química'),
+            children: _buildAsignaturaList('Química'),
           ),
           ExpansionTile(
-            title: const Text('Programación'),
-            children: <Widget>[
-              ListTile(
-                title: const Text('...'),
-              ),
-            ],
+            title: Text('Programación'),
+            children: _buildAsignaturaList('Programación'),
           ),
         ],
       ),
     );
   }
 
-  void _saveCourseSelection(String course, BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('curso', course);
-    Navigator.pop(context, course);
+  List<Widget> _buildAsignaturaList(String materia) {
+    List<String> asignaturas = materias[materia]?.keys.toList() ?? [];
+    return asignaturas.map((asignatura) {
+      return ListTile(
+        title: Text(asignatura),
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SeleccionTema(
+                materia: materia,
+                asignatura: asignatura,
+              ),
+            ),
+          );
+          if (result != null && result['tema'] != null) {
+            Navigator.pop(context, {
+              'materia': materia,
+              'asignatura': asignatura,
+              'tema': result['tema'],
+            });
+          }
+        },
+      );
+    }).toList();
   }
 }

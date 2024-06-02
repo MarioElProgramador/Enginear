@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:enginear/loading_screen.dart'; // Asegúrate de tener el import correcto
-import 'package:enginear/pagina_principal.dart'; // Asegúrate de tener el import correcto
+import 'package:enginear/loading_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -10,13 +9,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Enginear',
       theme: ThemeData(
-        primaryColor: Colors.blue,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.blue,
-        ),
+        primarySwatch: Colors.blue,
       ),
-      home: LoadingScreen(), // Muestra la pantalla de carga al inicio
+      home: LoadingScreen(),
     );
   }
 }

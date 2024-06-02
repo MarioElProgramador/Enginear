@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:enginear/seleccion_curso.dart';
-import 'package:enginear/generative_ai.dart' as ai;
+import 'package:enginear/data_structure.dart';
+import 'package:enginear/seleccion_tema.dart';
 
 class PaginaPrincipal extends StatefulWidget {
   @override
@@ -12,8 +13,11 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   int _contadorFuego = 0;
   DateTime _ultimaConexion = DateTime.now();
   bool _fuegoEncendido = false;
-  String _curso = "Curso";
-  String _equation = "";
+  String _materia = "Materia";
+  String _asignatura = "Asignatura";
+  String _tema = "Tema";
+  int _divisas = 150;
+  int _vidas = 5;
 
   @override
   void initState() {
@@ -27,7 +31,11 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
       _contadorFuego = prefs.getInt('contadorFuego') ?? 0;
       _ultimaConexion = DateTime.parse(prefs.getString('ultimaConexion') ?? DateTime.now().toString());
       _fuegoEncendido = _esFuegoEncendido(_ultimaConexion);
-      _curso = prefs.getString('curso') ?? "Curso";
+      _materia = prefs.getString('materia') ?? "Materia";
+      _asignatura = prefs.getString('asignatura') ?? "Asignatura";
+      _tema = prefs.getString('tema') ?? "Tema";
+      _divisas = prefs.getInt('divisas') ?? 150;
+      _vidas = prefs.getInt('vidas') ?? 5;
     });
     _verificarActualizacion();
   }
@@ -52,150 +60,197 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
     }
   }
 
-  Future<void> _generarEcuacion() async {
-    await ai.generarEcuacion().then((equation) {
-      setState(() {
-        _equation = equation ?? "No se pudo generar la ecuación";
-      });
+  Future<void> _actualizarDivisas(int cantidad) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _divisas = cantidad;
     });
+    await prefs.setInt('divisas', _divisas);
+  }
+
+  Future<void> _actualizarVidas(int cantidad) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _vidas = cantidad;
+    });
+    await prefs.setInt('vidas', _vidas);
+  }
+
+  int _getTemaIndex() {
+    List<String> temas = materias[_materia]?[_asignatura]?.keys?.toList() ?? [];
+    return temas.indexOf(_tema) + 1;
   }
 
   @override
   Widget build(BuildContext context) {
+    double iconSize = MediaQuery.of(context).size.width * 0.06;
+    double textSize = MediaQuery.of(context).size.width * 0.045;
+    double spacing = MediaQuery.of(context).size.width * 0.02;
+
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Column(
+        leadingWidth: 160.0,
+        leading: GestureDetector(
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SeleccionCurso()),
+            );
+            if (result != null) {
+              setState(() {
+                _materia = result['materia'] ?? _materia;
+                _asignatura = result['asignatura'] ?? _asignatura;
+                _tema = result['tema'] ?? _tema;
+              });
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              await prefs.setString('materia', _materia);
+              await prefs.setString('asignatura', _asignatura);
+              await prefs.setString('tema', _tema);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Row(
               children: [
-                GestureDetector(
-                  onTap: () async {
-                    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => SeleccionCurso()));
-                    if (result != null) {
-                      setState(() {
-                        _curso = result;
-                      });
-                    }
-                  },
-                  child: Icon(Icons.school),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => SeleccionCurso()));
-                    if (result != null) {
-                      setState(() {
-                        _curso = result;
-                      });
-                    }
-                  },
+                Icon(Icons.school, size: iconSize),
+                SizedBox(width: 4.0),
+                Expanded(
                   child: Text(
-                    '$_curso',
-                    style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
+                    _asignatura,
+                    style: TextStyle(fontSize: textSize, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            Spacer(),
-            _fuegoEncendido
-                ? Icon(Icons.whatshot, color: Colors.orange)
-                : Icon(Icons.whatshot, color: Colors.grey[700]),
-            SizedBox(width: 4.0),
-            Text(
-              '$_contadorFuego',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Spacer(),
-            Icon(Icons.attach_money),
-            SizedBox(width: 4.0),
-            Text(
-              '0',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            IconButton(
-              icon: Icon(Icons.calculate),
-              onPressed: _generarEcuacion,
-            ),
-          ],
-        ),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(48.0),
-          child: AppBar(
-            title: Text('Tema seleccionado', style: TextStyle(color: Colors.black)), // Cambia el color aquí
-            automaticallyImplyLeading: false,
-            backgroundColor: Colors.grey[200],
           ),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildSection("Apartado 1", Colors.blue, context),
-              SizedBox(height: 16.0),
-              _buildSection("Apartado 2", Colors.green, context),
-              SizedBox(height: 16.0),
-              Text(
-                _equation,
-                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-              ),
-            ],
+        title: null,
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(right: 8.0),
+            child: Row(
+              children: [
+                Icon(Icons.whatshot, color: _fuegoEncendido ? Colors.orange : Colors.grey[700], size: iconSize),
+                SizedBox(width: spacing),
+                Text(
+                  '$_contadorFuego',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: textSize),
+                ),
+                SizedBox(width: spacing),
+                Icon(Icons.favorite, size: iconSize, color: Colors.red),
+                SizedBox(width: spacing),
+                Text(
+                  '$_vidas',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: textSize),
+                ),
+                SizedBox(width: spacing),
+                Icon(Icons.attach_money, size: iconSize, color: Colors.green),
+                SizedBox(width: spacing * 0.5),
+                Text(
+                  '$_divisas',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: textSize),
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildSection(String title, Color color, BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Column(
         children: [
           Container(
-            color: color,
+            color: Colors.blue[100],
+            width: double.infinity,
             padding: EdgeInsets.all(8.0),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Tema ${_getTemaIndex()}: $_tema',
+                    style: TextStyle(fontSize: 20),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.arrow_drop_down_circle),
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SeleccionTema(
+                          materia: _materia,
+                          asignatura: _asignatura,
+                        ),
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() {
+                        _tema = result['tema'] ?? _tema;
+                      });
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setString('tema', _tema);
+                    }
+                  },
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 8.0),
-          Column(
-            children: [
-              _buildLessonButton(Icons.edit, context),
-              SizedBox(height: 16),
-              _buildLessonButton(Icons.edit, context),
-              SizedBox(height: 16),
-              _buildLessonButton(Icons.edit, context),
-              SizedBox(height: 16),
-              _buildLessonButton(Icons.edit, context),
-            ],
+          Expanded(
+            child: ListView.builder(
+              itemCount: _getApartados().length,
+              itemBuilder: (context, index) {
+                String apartado = _getApartados()[index];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      color: Colors.green[100],
+                      width: double.infinity,
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'Apartado ${index + 1}: $apartado',
+                        style: TextStyle(fontSize: 18),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(4, (i) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.blue[200],
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                icon: Icon(Icons.edit, color: Colors.white),
+                                onPressed: () {
+                                  // Acción para iniciar una lección
+                                },
+                                iconSize: 50,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLessonButton(IconData iconData, BuildContext context) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.grey[300],
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: Icon(iconData),
-        onPressed: () {
-          // Acción al presionar el botón de la lección
-        },
-      ),
-    );
+  List<String> _getApartados() {
+    Map<String, List<String>>? temas = materias[_materia]?[_asignatura];
+    List<String> apartados = temas?[_tema] ?? [];
+    return apartados;
   }
 }
