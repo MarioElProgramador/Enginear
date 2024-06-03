@@ -1,8 +1,8 @@
+// generative_ai.dart
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
-Future<String?> generarEcuacion() async {
-  // Cargar las variables de entorno
+Future<String?> generarEjercicio(String tema, String apartado) async {
   await dotenv.load(fileName: ".env");
   final apiKey = dotenv.env['API_KEY'];
 
@@ -11,18 +11,17 @@ Future<String?> generarEcuacion() async {
     return null;
   }
 
-  // Configurar el modelo de Google Generative AI
   final model = GenerativeModel(model: "gemini-pro", apiKey: apiKey);
   final chat = model.startChat();
 
   try {
-    final prompt = 'Generate a mathematical equation for a quadratic function with roots at x = 2 and x = -1';
+    final prompt = 'Generate a complete exercise for the topic "$tema" and the subtopic "$apartado". Provide the question and the answer clearly separated.';
     final response = await chat.sendMessage(Content.text(prompt));
 
-    final equation = response.text;
-    if (equation != null) {
-      print('Equation: $equation');
-      return equation;
+    final exercise = response.text;
+    if (exercise != null) {
+      print('Exercise: $exercise');
+      return exercise;
     } else {
       print('No response from API.');
       return null;
@@ -32,4 +31,3 @@ Future<String?> generarEcuacion() async {
     return null;
   }
 }
-

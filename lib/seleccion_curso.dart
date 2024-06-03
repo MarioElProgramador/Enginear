@@ -13,28 +13,31 @@ class _SeleccionCursoState extends State<SeleccionCurso> {
   String? _selectedMateria;
   String? _selectedAsignatura;
 
+  Map<String, bool> _expanded = {
+    'Matemáticas': false,
+    'Ciencias': false,
+    'Programación': false,
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Seleccionar Curso'),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ExpansionTile(
-            title: Text('Matemáticas'),
-            children: _buildAsignaturaList('Matemáticas'),
-          ),
-          ExpansionTile(
-            title: Text('Química'),
-            children: _buildAsignaturaList('Química'),
-          ),
-          ExpansionTile(
-            title: Text('Programación'),
-            children: _buildAsignaturaList('Programación'),
-          ),
-        ],
+      body: ListView(
+        children: _expanded.keys.map((materia) {
+          return ExpansionTile(
+            title: Text(materia),
+            initiallyExpanded: _expanded[materia]!,
+            onExpansionChanged: (bool expanded) {
+              setState(() {
+                _expanded[materia] = expanded;
+              });
+            },
+            children: _buildAsignaturaList(materia),
+          );
+        }).toList(),
       ),
     );
   }

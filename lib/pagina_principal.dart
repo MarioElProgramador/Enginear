@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:enginear/seleccion_curso.dart';
 import 'package:enginear/data_structure.dart';
 import 'package:enginear/seleccion_tema.dart';
+import 'package:enginear/leccion.dart';  // Importar la pantalla de lección
+import 'chatbot.dart';  // Importar el chatbot
 
 class PaginaPrincipal extends StatefulWidget {
   @override
@@ -79,6 +81,25 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   int _getTemaIndex() {
     List<String> temas = materias[_materia]?[_asignatura]?.keys?.toList() ?? [];
     return temas.indexOf(_tema) + 1;
+  }
+
+  int _selectedIndex = 1;
+
+  void _onItemTapped(int index) {
+    if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => PaginaPrincipal()),
+      );
+    } else if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const Chatbot()),
+      );
+    }
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
@@ -230,6 +251,15 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                                 icon: Icon(Icons.edit, color: Colors.white),
                                 onPressed: () {
                                   // Acción para iniciar una lección
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LeccionPage(
+                                        tema: _tema,
+                                        apartado: apartado,
+                                      ),
+                                    ),
+                                  );
                                 },
                                 iconSize: 50,
                               ),
@@ -244,6 +274,26 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.lightbulb),
+            label: '',
+          ),
+        ],
+        iconSize: 40.0,
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: _onItemTapped,
       ),
     );
   }
