@@ -1,4 +1,3 @@
-// generative_ai.dart
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
@@ -15,7 +14,9 @@ Future<String?> generarEjercicio(String tema, String apartado) async {
   final chat = model.startChat();
 
   try {
-    final prompt = 'Generate a complete exercise for the topic "$tema" and the subtopic "$apartado". Provide the question and the answer clearly separated.';
+    final prompt = '''
+Generate a simple and fast exercise for the topic "$tema" and the subtopic "$apartado". The exercise should include a clearly defined question and answer. If there are any mathematical expressions involved, provide them in LaTeX format using "double dollar signs" for block mode and "single dollar signs" for inline mode. Ensure the question and the answer are clearly separated by "Respuesta:". The answer should be simple and direct.
+''';
     final response = await chat.sendMessage(Content.text(prompt));
 
     final exercise = response.text;

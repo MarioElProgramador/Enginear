@@ -1,14 +1,15 @@
-import 'package:enginear/pagina_principal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Importa el paquete dotenv
-import 'package:enginear/chatbot.dart'; // Asegúrate de que la ruta sea correcta
+import 'package:enginear/loading_screen.dart'; // Importa la pantalla de carga
 
 void main() async {
   await dotenv.load(fileName: ".env"); // Carga las variables de entorno
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: PaginaPrincipal(), // Asegúrate de que la ruta sea correcta
+      home: const LoadingScreen(), // Pantalla de carga
     );
   }
 }

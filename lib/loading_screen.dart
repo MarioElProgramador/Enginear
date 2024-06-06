@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:enginear/pagina_principal.dart'; // Asegúrate de tener el import correcto
 
 class LoadingScreen extends StatefulWidget {
+  const LoadingScreen({super.key});
+
   @override
   _LoadingScreenState createState() => _LoadingScreenState();
 }
@@ -18,14 +20,14 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   void _startFadeOut() {
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         _opacity = 0.0;
       });
       // Navigate to the next screen after the fade out
-      Future.delayed(Duration(seconds: 1), () {
+      Future.delayed(const Duration(seconds: 1), () {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => PaginaPrincipal()),
+          MaterialPageRoute(builder: (context) => const PaginaPrincipal()),
         );
       });
     });
@@ -37,7 +39,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
       body: Center(
         child: AnimatedOpacity(
           opacity: _opacity,
-          duration: Duration(seconds: 1),
+          duration: const Duration(seconds: 1),
           child: Image.asset('assets/images/logoWithBackground.png'), // Asegúrate de que la ruta sea correcta
         ),
       ),

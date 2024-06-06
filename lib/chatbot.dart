@@ -16,20 +16,28 @@ class _ChatbotState extends State<Chatbot> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _loading = false;
+  final List<Map<String, dynamic>> _chatHistory = [];
 
   @override
   void initState() {
     super.initState();
-    // Asegúrate de que dotenv se ha cargado antes de acceder a las variables de entorno
     if (dotenv.isInitialized) {
       _model = GenerativeModel(
         model: "gemini-pro",
         apiKey: dotenv.env['API_KEY']!,
       );
       _chat = _model.startChat();
+      _sendInitialMessage();
     } else {
       throw Exception('Dotenv is not initialized. Make sure to load dotenv in main.dart');
     }
+  }
+
+  void _sendInitialMessage() {
+    const initialMessage = "¡Hola! Soy el chatbot aplicado a Enginear utilizando Gemini. Mis conocimientos son generales y no específicos al entorno de matemáticas, por lo que recomiendo un uso responsable. ¿En qué puedo ayudarte hoy?";
+    setState(() {
+      _chatHistory.add({'text': initialMessage, 'isUser': false});
+    });
   }
 
   @override
@@ -37,7 +45,7 @@ class _ChatbotState extends State<Chatbot> {
     bool hasApiKey = dotenv.env['API_KEY'] != null && dotenv.env['API_KEY']!.isNotEmpty;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Build with Gemini"),
+        title: const Text("Chatbot de Enginear"),
         centerTitle: true,
       ),
       body: Padding(
@@ -51,14 +59,15 @@ class _ChatbotState extends State<Chatbot> {
                   ? ListView.builder(
                 controller: _scrollController,
                 itemBuilder: (context, idx) {
-                  final content = _chat.history.toList()[idx];
-                  final text = content.parts.whereType<TextPart>().map<String>((e) => e.text).join('');
+                  final content = _chatHistory[idx];
+                  final text = content['text'];
+                  final isUser = content['isUser'];
                   return MessageWidget(
                     text: text,
-                    isFromUser: content.role == 'user',
+                    isFromUser: isUser,
                   );
                 },
-                itemCount: _chat.history.length,
+                itemCount: _chatHistory.length,
               )
                   : ListView(
                 children: const [
@@ -79,7 +88,7 @@ class _ChatbotState extends State<Chatbot> {
                       autofocus: true,
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.all(15),
-                        hintText: 'Enter a prompt...',
+                        hintText: 'Escribe tu mensaje',
                         border: OutlineInputBorder(
                           borderRadius: const BorderRadius.all(
                             Radius.circular(14),
@@ -130,13 +139,18 @@ class _ChatbotState extends State<Chatbot> {
     setState(() => _loading = true);
 
     try {
-      final response = await _chat.sendMessage(Content.text(message));
+      setState(() {
+        _chatHistory.add({'text': message, 'isUser': true});
+      });
+
+      final userMessage = Content.text(message);
+      final response = await _chat.sendMessage(userMessage);
       final text = response.text;
-      if (text == null) {
-        debugPrint('No response from API.');
-        return;
+      if (text != null) {
+        setState(() {
+          _chatHistory.add({'text': text, 'isUser': false});
+        });
       }
-      setState(() => _loading = false);
     } catch (e) {
       debugPrint(e.toString());
     } finally {
@@ -165,9 +179,7 @@ class MessageWidget extends StatelessWidget {
           child: Container(
             constraints: const BoxConstraints(maxWidth: 600),
             decoration: BoxDecoration(
-              color: isFromUser
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : Theme.of(context).colorScheme.surfaceVariant,
+              color: isFromUser ? Colors.blue[100] : Colors.grey[300],
               borderRadius: BorderRadius.circular(18),
             ),
             padding: const EdgeInsets.symmetric(
@@ -178,6 +190,11 @@ class MessageWidget extends StatelessWidget {
             child: MarkdownBody(
               selectable: true,
               data: text,
+              styleSheet: MarkdownStyleSheet(
+                p: TextStyle(
+                  color: isFromUser ? Colors.black : Colors.black87,
+                ),
+              ),
             ),
           ),
         ),

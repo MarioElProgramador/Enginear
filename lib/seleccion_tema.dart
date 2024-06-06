@@ -5,15 +5,15 @@ class SeleccionTema extends StatelessWidget {
   final String materia;
   final String asignatura;
 
-  SeleccionTema({required this.materia, required this.asignatura});
+  const SeleccionTema({super.key, required this.materia, required this.asignatura});
 
   @override
   Widget build(BuildContext context) {
-    List<String> temas = materias[materia]?[asignatura]?.keys?.toList() ?? [];
+    List<String> temas = materias[materia]?[asignatura]?.keys.toList() ?? [];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Selecciona un Tema"),
+        title: const Text("Selecciona un Tema"),
       ),
       body: Center(
         child: ListView.builder(

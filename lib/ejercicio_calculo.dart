@@ -2,12 +2,12 @@
 final List<Map<String, dynamic>> ejerciciosCalculo = [
   {
     'tipo': 'fill_in_blank',
-    'pregunta': 'lim_{x \\to 2} (3x - 5) = ___',
+    'pregunta': r'$$\lim_{x \to 2} (3x - 5) = \_\_\_$$',
     'respuesta': '1'
   },
   {
     'tipo': 'multiple_choice',
-    'pregunta': '¿Cuál es el valor de lim_{x \\to 0} \\sin(x) / x?',
+    'pregunta': r'¿Cuál es el valor de $$\lim_{x \to 0} \frac{\sin(x)}{x}$$?',
     'opciones': ['0', '1', 'Infinito', 'No existe'],
     'respuesta': '1'
   },
@@ -29,7 +29,7 @@ final List<Map<String, dynamic>> ejerciciosCalculo = [
   },
   {
     'tipo': 'fill_in_blank',
-    'pregunta': 'Si lim_{x \\to 3} f(x) = 7, entonces, por definición, para cualquier \\epsilon > 0, existe un \\delta > 0 tal que si 0 < |x - 3| < \\delta, entonces |f(x) - ___| < \\epsilon.',
+    'pregunta': r'Si $$\lim_{x \to 3} f(x) = 7$$, entonces, por definición, para cualquier $$\epsilon > 0$$, existe un $$\delta > 0$$ tal que si $$0 < |x - 3| < \delta$$, entonces $$|f(x) - \_\_\_| < \epsilon$$.',
     'respuesta': '7'
   },
 ];

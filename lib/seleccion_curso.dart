@@ -5,6 +5,8 @@ import 'package:enginear/data_structure.dart';
 import 'package:enginear/seleccion_tema.dart';
 
 class SeleccionCurso extends StatefulWidget {
+  const SeleccionCurso({super.key});
+
   @override
   _SeleccionCursoState createState() => _SeleccionCursoState();
 }
@@ -13,7 +15,7 @@ class _SeleccionCursoState extends State<SeleccionCurso> {
   String? _selectedMateria;
   String? _selectedAsignatura;
 
-  Map<String, bool> _expanded = {
+  final Map<String, bool> _expanded = {
     'Matemáticas': false,
     'Ciencias': false,
     'Programación': false,
@@ -23,7 +25,7 @@ class _SeleccionCursoState extends State<SeleccionCurso> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Seleccionar Curso'),
+        title: const Text('Seleccionar Curso'),
       ),
       body: ListView(
         children: _expanded.keys.map((materia) {

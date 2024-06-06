@@ -1,3 +1,4 @@
+// Importaciones existentes y nuevas
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:enginear/seleccion_curso.dart';
@@ -7,13 +8,15 @@ import 'package:enginear/leccion.dart';  // Importar la pantalla de lección
 import 'chatbot.dart';  // Importar el chatbot
 
 class PaginaPrincipal extends StatefulWidget {
+  const PaginaPrincipal({super.key});
+
   @override
   _PaginaPrincipalState createState() => _PaginaPrincipalState();
 }
 
 class _PaginaPrincipalState extends State<PaginaPrincipal> {
   int _contadorFuego = 0;
-  DateTime _ultimaConexion = DateTime.now();
+  DateTime _ultimaLeccionFecha = DateTime.now();
   bool _fuegoEncendido = false;
   String _materia = "Materia";
   String _asignatura = "Asignatura";
@@ -31,8 +34,8 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _contadorFuego = prefs.getInt('contadorFuego') ?? 0;
-      _ultimaConexion = DateTime.parse(prefs.getString('ultimaConexion') ?? DateTime.now().toString());
-      _fuegoEncendido = _esFuegoEncendido(_ultimaConexion);
+      _ultimaLeccionFecha = DateTime.parse(prefs.getString('ultimaLeccionFecha') ?? DateTime.now().toString());
+      _fuegoEncendido = _esFuegoEncendido(_ultimaLeccionFecha);
       _materia = prefs.getString('materia') ?? "Materia";
       _asignatura = prefs.getString('asignatura') ?? "Asignatura";
       _tema = prefs.getString('tema') ?? "Tema";
@@ -45,21 +48,33 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   bool _esFuegoEncendido(DateTime fecha) {
     DateTime ahora = DateTime.now();
     Duration diferencia = ahora.difference(fecha);
-    return diferencia.inDays >= 1;
+    return diferencia.inDays < 1;  // Encendido si ha hecho una lección hoy
   }
 
   Future<void> _verificarActualizacion() async {
     DateTime ahora = DateTime.now();
-    if (ahora.day != _ultimaConexion.day || ahora.month != _ultimaConexion.month || ahora.year != _ultimaConexion.year) {
+    if (ahora.day != _ultimaLeccionFecha.day || ahora.month != _ultimaLeccionFecha.month || ahora.year != _ultimaLeccionFecha.year) {
       setState(() {
-        _contadorFuego++;
-        _ultimaConexion = ahora;
-        _fuegoEncendido = true;
+        _fuegoEncendido = false;  // Apagar el fuego al comenzar un nuevo día
       });
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('contadorFuego', _contadorFuego);
-      await prefs.setString('ultimaConexion', _ultimaConexion.toString());
+      await prefs.setBool('fuegoEncendido', _fuegoEncendido);
     }
+  }
+
+  Future<void> _actualizarRacha() async {
+    DateTime ahora = DateTime.now();
+    setState(() {
+      _ultimaLeccionFecha = ahora;
+      if (!_fuegoEncendido) {
+        _fuegoEncendido = true;
+        _contadorFuego++;
+      }
+    });
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('ultimaLeccionFecha', _ultimaLeccionFecha.toString());
+    await prefs.setBool('fuegoEncendido', _fuegoEncendido);
+    await prefs.setInt('contadorFuego', _contadorFuego);
   }
 
   Future<void> _actualizarDivisas(int cantidad) async {
@@ -79,7 +94,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   }
 
   int _getTemaIndex() {
-    List<String> temas = materias[_materia]?[_asignatura]?.keys?.toList() ?? [];
+    List<String> temas = materias[_materia]?[_asignatura]?.keys.toList() ?? [];
     return temas.indexOf(_tema) + 1;
   }
 
@@ -89,7 +104,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
     if (index == 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PaginaPrincipal()),
+        MaterialPageRoute(builder: (context) => const PaginaPrincipal()),
       );
     } else if (index == 2) {
       Navigator.push(
@@ -102,20 +117,26 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
     });
   }
 
+  void _onLeccionCompleta() {
+    _actualizarRacha();
+  }
+
   @override
   Widget build(BuildContext context) {
-    double iconSize = MediaQuery.of(context).size.width * 0.06;
-    double textSize = MediaQuery.of(context).size.width * 0.045;
-    double spacing = MediaQuery.of(context).size.width * 0.02;
+    bool isMobile = MediaQuery.of(context).size.width < 600;
+    double iconSize = isMobile ? 24.0 : MediaQuery.of(context).size.width * 0.04;
+    double textSize = isMobile ? 18.0 : MediaQuery.of(context).size.width * 0.035;
+    double spacing = isMobile ? 8.0 : MediaQuery.of(context).size.width * 0.015;
+    double paddingHorizontal = isMobile ? 8.0 : MediaQuery.of(context).size.width * 0.05;
 
     return Scaffold(
       appBar: AppBar(
-        leadingWidth: 160.0,
-        leading: GestureDetector(
+        titleSpacing: 0.0,
+        title: GestureDetector(
           onTap: () async {
             final result = await Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => SeleccionCurso()),
+              MaterialPageRoute(builder: (context) => const SeleccionCurso()),
             );
             if (result != null) {
               setState(() {
@@ -130,11 +151,11 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
             }
           },
           child: Padding(
-            padding: const EdgeInsets.only(left: 8.0),
+            padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
             child: Row(
               children: [
                 Icon(Icons.school, size: iconSize),
-                SizedBox(width: 4.0),
+                const SizedBox(width: 4.0),
                 Expanded(
                   child: Text(
                     _asignatura,
@@ -146,11 +167,9 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
             ),
           ),
         ),
-        title: null,
-        centerTitle: true,
         actions: [
           Padding(
-            padding: EdgeInsets.only(right: 8.0),
+            padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
             child: Row(
               children: [
                 Icon(Icons.whatshot, color: _fuegoEncendido ? Colors.orange : Colors.grey[700], size: iconSize),
@@ -183,19 +202,19 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
           Container(
             color: Colors.blue[100],
             width: double.infinity,
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
                     'Tema ${_getTemaIndex()}: $_tema',
-                    style: TextStyle(fontSize: 20),
+                    style: const TextStyle(fontSize: 20),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.arrow_drop_down_circle),
+                  icon: const Icon(Icons.arrow_drop_down_circle),
                   onPressed: () async {
                     final result = await Navigator.push(
                       context,
@@ -229,10 +248,10 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                     Container(
                       color: Colors.green[100],
                       width: double.infinity,
-                      padding: EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(8.0),
                       child: Text(
                         'Apartado ${index + 1}: $apartado',
-                        style: TextStyle(fontSize: 18),
+                        style: const TextStyle(fontSize: 18),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -248,7 +267,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(
-                                icon: Icon(Icons.edit, color: Colors.white),
+                                icon: const Icon(Icons.edit, color: Colors.white),
                                 onPressed: () {
                                   // Acción para iniciar una lección
                                   Navigator.push(
@@ -257,6 +276,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                                       builder: (context) => LeccionPage(
                                         tema: _tema,
                                         apartado: apartado,
+                                        onLeccionCompleta: _onLeccionCompleta,
                                       ),
                                     ),
                                   );
@@ -290,7 +310,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
             label: '',
           ),
         ],
-        iconSize: 40.0,
+        iconSize: isMobile ? 28.0 : 40.0,
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],
         onTap: _onItemTapped,
