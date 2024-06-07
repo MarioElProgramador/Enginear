@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_math_fork/flutter_math.dart'; // Importar flutter_math_fork
+import 'package:flutter_tex/flutter_tex.dart'; // Importar flutter_tex
 import 'pagina_principal.dart';
 import 'ejercicio_calculo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -276,9 +276,16 @@ class _LeccionPageState extends State<LeccionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Math.tex(
-              currentExercise['pregunta'],
-              textStyle: const TextStyle(fontSize: 18),
+            TeXView(
+              child: TeXViewDocument(
+                currentExercise['pregunta'],
+                style: TeXViewStyle(
+                  textAlign: TeXViewTextAlign.left,
+                  fontStyle: TeXViewFontStyle(
+                    fontSize: 18,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             if (currentExercise['tipo'] == 'fill_in_blank') ...[
