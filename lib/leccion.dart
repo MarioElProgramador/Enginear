@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tex/flutter_tex.dart'; // Importar flutter_tex
-import 'pagina_principal.dart';
-import 'ejercicio_calculo.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'generative_ai.dart';
+import 'pagina_principal.dart';
 import 'chatbot.dart';
 import 'pagina_felicitaciones.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 class LeccionPage extends StatefulWidget {
   final String tema;
@@ -13,90 +13,99 @@ class LeccionPage extends StatefulWidget {
   final VoidCallback onLeccionCompleta;
 
   const LeccionPage({
-    super.key,
+    Key? key,
     required this.tema,
     required this.apartado,
     required this.onLeccionCompleta,
-  });
+  }) : super(key: key);
 
   @override
   _LeccionPageState createState() => _LeccionPageState();
 }
 
 class _LeccionPageState extends State<LeccionPage> {
-  List<Map<String, dynamic>>? _ejercicios;
-  int _currentExerciseIndex = 0;
+  late final GenerativeModel _model;
+  late final ChatSession _chat;
+  Map<String, dynamic>? _currentExercise;
   String? _respuestaUsuario;
-  int _vidas = 0; // Inicializar con 0 para luego cargar las vidas desde SharedPreferences
-  int _divisas = 0; // Inicializar con 0 para luego cargar las divisas desde SharedPreferences
+  int _vidas = 0;
+  int _divisas = 0;
+  bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _cargarEjercicios();
-    _cargarVidasYDivisas(); // Cargar las vidas y divisas desde SharedPreferences
+    if (dotenv.isInitialized) {
+      _model = GenerativeModel(
+        model: "gemini-pro",
+        apiKey: dotenv.env['API_KEY']!,
+      );
+      _chat = _model.startChat();
+    } else {
+      throw Exception('Dotenv is not initialized. Make sure to load dotenv in main.dart');
+    }
+    _cargarVidasYDivisas();
+    _generarEjercicio();
   }
 
   Future<void> _cargarVidasYDivisas() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _vidas = prefs.getInt('vidas') ?? 5; // Cargar las vidas, por defecto 5
-      _divisas = prefs.getInt('divisas') ?? 0; // Cargar las divisas, por defecto 0
+      _vidas = prefs.getInt('vidas') ?? 5;
+      _divisas = prefs.getInt('divisas') ?? 0;
     });
   }
 
   Future<void> _guardarDivisas() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('divisas', _divisas); // Guardar las divisas actualizadas
+    await prefs.setInt('divisas', _divisas);
   }
 
-  Future<void> _cargarEjercicios() async {
-    if (widget.tema == 'Límites y Continuidad' && widget.apartado == 'Concepto de Límite') {
-      setState(() {
-        _ejercicios = ejerciciosCalculo;
-      });
-    } else {
-      String? ejercicioGenerado = await generarEjercicio(widget.tema, widget.apartado);
-      if (ejercicioGenerado != null) {
-        final partes = ejercicioGenerado.split('Respuesta:');
-        if (partes.length == 2) {
-          final pregunta = partes[0].replaceAll(RegExp(r'\*\*(.*?)\*\*'), '').trim();
-          final respuesta = partes[1].trim();
+  Future<void> _generarEjercicio() async {
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      final prompt = "Genera un ejercicio con respuesta para el tema '${widget.tema}' y el apartado '${widget.apartado}'.";
+      final userMessage = Content.text(prompt);
+      final response = await _chat.sendMessage(userMessage);
+      final text = response.text;
+      if (text != null) {
+        final parts = text.split("**Respuesta:**");
+        if (parts.length == 2) {
           setState(() {
-            _ejercicios = [
-              {
-                'tipo': 'generated',
-                'pregunta': pregunta,
-                'respuesta': respuesta,
-              }
-            ];
+            _currentExercise = {
+              'pregunta': parts[0].trim(),
+              'respuesta': parts[1].trim()
+            };
           });
         } else {
           setState(() {
-            _ejercicios = [];
+            _currentExercise = null;
           });
         }
       } else {
         setState(() {
-          _ejercicios = [];
+          _currentExercise = null;
         });
       }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      setState(() {
+        _loading = false;
+      });
     }
   }
 
   void _completarEjercicio() async {
-    if (_currentExerciseIndex < (_ejercicios?.length ?? 0) - 1) {
-      setState(() {
-        _currentExerciseIndex++;
-      });
-    } else {
-      await _actualizarRacha();
-      widget.onLeccionCompleta();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const FelicitacionesPage()),
-      );
-    }
+    await _actualizarRacha();
+    widget.onLeccionCompleta();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const FelicitacionesPage()),
+    );
   }
 
   Future<void> _actualizarRacha() async {
@@ -109,7 +118,7 @@ class _LeccionPageState extends State<LeccionPage> {
       if (ahora.difference(ultimaLeccionFecha).inDays == 1) {
         contadorFuego++;
       } else {
-        contadorFuego = 1; // Reset racha si hay un salto de más de un día
+        contadorFuego = 1;
       }
       await prefs.setInt('contadorFuego', contadorFuego);
     }
@@ -123,7 +132,7 @@ class _LeccionPageState extends State<LeccionPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          content: Text('Desearías obtener ayuda del chatbot a cambio de 10 divisas? Tienes $_divisas.'),
+          content: Text('¿Deseas obtener ayuda del chatbot a cambio de 10 divisas? Tienes $_divisas.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -136,7 +145,7 @@ class _LeccionPageState extends State<LeccionPage> {
                 if (_divisas >= 10) {
                   setState(() {
                     _divisas -= 10;
-                    _guardarDivisas(); // Guardar las divisas actualizadas
+                    _guardarDivisas();
                   });
                   Navigator.of(context).pop();
                   Navigator.push(
@@ -160,84 +169,6 @@ class _LeccionPageState extends State<LeccionPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_ejercicios == null) {
-      return Scaffold(
-        appBar: AppBar(
-          leading: TextButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const PaginaPrincipal()),
-              );
-            },
-            child: const Text(
-              'Salir',
-              style: TextStyle(color: Colors.black54),
-            ),
-          ),
-          centerTitle: true,
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.favorite, color: Colors.red),
-              const SizedBox(width: 4),
-              Text(
-                '$_vidas',
-                style: const TextStyle(color: Colors.black54),
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.lightbulb_outline),
-              onPressed: _mostrarPopupChatbot,
-            ),
-          ],
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_ejercicios!.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          leading: TextButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const PaginaPrincipal()),
-              );
-            },
-            child: const Text(
-              'Salir',
-              style: TextStyle(color: Colors.black54),
-            ),
-          ),
-          centerTitle: true,
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.favorite, color: Colors.red),
-              const SizedBox(width: 4),
-              Text(
-                '$_vidas',
-                style: const TextStyle(color: Colors.black54),
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.lightbulb_outline),
-              onPressed: _mostrarPopupChatbot,
-            ),
-          ],
-        ),
-        body: const Center(child: Text('No se pudieron cargar los ejercicios')),
-      );
-    }
-
-    final currentExercise = _ejercicios![_currentExerciseIndex];
-
     return Scaffold(
       appBar: AppBar(
         leading: TextButton(
@@ -276,72 +207,43 @@ class _LeccionPageState extends State<LeccionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TeXView(
-              child: TeXViewDocument(
-                currentExercise['pregunta'],
-                style: TeXViewStyle(
-                  textAlign: TeXViewTextAlign.left,
-                  fontStyle: TeXViewFontStyle(
-                    fontSize: 18,
+            if (_loading)
+              const Center(child: CircularProgressIndicator())
+            else if (_currentExercise == null)
+              const Center(child: Text('No se pudieron cargar los ejercicios'))
+            else ...[
+                MarkdownBody(
+                  data: _currentExercise!['pregunta'],
+                  styleSheet: MarkdownStyleSheet(
+                    p: TextStyle(fontSize: 18),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            if (currentExercise['tipo'] == 'fill_in_blank') ...[
-              TextField(
-                onChanged: (value) {
-                  setState(() {
-                    _respuestaUsuario = value;
-                  });
-                },
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Tu respuesta',
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_respuestaUsuario == currentExercise['respuesta']) {
-                    _completarEjercicio();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Respuesta incorrecta')),
-                    );
-                  }
-                },
-                child: const Text('Verificar'),
-              ),
-            ],
-            if (currentExercise['tipo'] == 'multiple_choice') ...[
-              ...currentExercise['opciones'].map<Widget>((opcion) {
-                return ListTile(
-                  title: Text(opcion),
-                  leading: Radio<String>(
-                    value: opcion,
-                    groupValue: _respuestaUsuario,
-                    onChanged: (value) {
-                      setState(() {
-                        _respuestaUsuario = value;
-                      });
-                    },
+                const SizedBox(height: 20),
+                TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _respuestaUsuario = value;
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Tu respuesta',
                   ),
-                );
-              }).toList(),
-              ElevatedButton(
-                onPressed: () {
-                  if (_respuestaUsuario == currentExercise['respuesta']) {
-                    _completarEjercicio();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Respuesta incorrecta')),
-                    );
-                  }
-                },
-                child: const Text('Verificar'),
-              ),
-            ],
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_respuestaUsuario == _currentExercise!['respuesta']) {
+                      _completarEjercicio();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Respuesta incorrecta')),
+                      );
+                    }
+                  },
+                  child: const Text('Verificar'),
+                ),
+              ],
           ],
         ),
       ),

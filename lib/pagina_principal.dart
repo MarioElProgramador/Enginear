@@ -1,17 +1,17 @@
-// Importaciones existentes y nuevas
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:enginear/seleccion_curso.dart';
 import 'package:enginear/data_structure.dart';
 import 'package:enginear/seleccion_tema.dart';
-import 'package:enginear/leccion.dart';  // Importar la pantalla de lección
-import 'chatbot.dart';  // Importar el chatbot
+import 'package:enginear/leccion.dart';
+import 'chatbot.dart';
+import 'apuntes.dart';
 
 class PaginaPrincipal extends StatefulWidget {
   const PaginaPrincipal({super.key});
 
   @override
-  _PaginaPrincipalState createState() => _PaginaPrincipalState();
+  State<PaginaPrincipal> createState() => _PaginaPrincipalState();
 }
 
 class _PaginaPrincipalState extends State<PaginaPrincipal> {
@@ -48,14 +48,14 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   bool _esFuegoEncendido(DateTime fecha) {
     DateTime ahora = DateTime.now();
     Duration diferencia = ahora.difference(fecha);
-    return diferencia.inDays < 1;  // Encendido si ha hecho una lección hoy
+    return diferencia.inDays < 1;
   }
 
   Future<void> _verificarActualizacion() async {
     DateTime ahora = DateTime.now();
     if (ahora.day != _ultimaLeccionFecha.day || ahora.month != _ultimaLeccionFecha.month || ahora.year != _ultimaLeccionFecha.year) {
       setState(() {
-        _fuegoEncendido = false;  // Apagar el fuego al comenzar un nuevo día
+        _fuegoEncendido = false;
       });
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('fuegoEncendido', _fuegoEncendido);
@@ -131,6 +131,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,  // Desactivar el botón de retroceso predeterminado
         titleSpacing: 0.0,
         title: GestureDetector(
           onTap: () async {
@@ -172,25 +173,37 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
             padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
             child: Row(
               children: [
-                Icon(Icons.whatshot, color: _fuegoEncendido ? Colors.orange : Colors.grey[700], size: iconSize),
-                SizedBox(width: spacing),
-                Text(
-                  '$_contadorFuego',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: textSize),
+                Row(
+                  children: [
+                    Icon(Icons.whatshot, color: _fuegoEncendido ? Colors.orange : Colors.grey[700], size: iconSize),
+                    SizedBox(width: spacing),
+                    Text(
+                      '$_contadorFuego',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: textSize),
+                    ),
+                  ],
                 ),
-                SizedBox(width: spacing),
-                Icon(Icons.favorite, size: iconSize, color: Colors.red),
-                SizedBox(width: spacing),
-                Text(
-                  '$_vidas',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: textSize),
+                SizedBox(width: spacing * 2),
+                Row(
+                  children: [
+                    Icon(Icons.favorite, size: iconSize, color: Colors.red),
+                    SizedBox(width: spacing),
+                    Text(
+                      '$_vidas',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: textSize),
+                    ),
+                  ],
                 ),
-                SizedBox(width: spacing),
-                Icon(Icons.attach_money, size: iconSize, color: Colors.green),
-                SizedBox(width: spacing * 0.5),
-                Text(
-                  '$_divisas',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: textSize),
+                SizedBox(width: spacing * 2),
+                Row(
+                  children: [
+                    Icon(Icons.attach_money, size: iconSize, color: Colors.green),
+                    SizedBox(width: spacing * 0.5),
+                    Text(
+                      '$_divisas',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: textSize),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -249,10 +262,31 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                       color: Colors.green[100],
                       width: double.infinity,
                       padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'Apartado ${index + 1}: $apartado',
-                        style: const TextStyle(fontSize: 18),
-                        textAlign: TextAlign.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'Apartado ${index + 1}: $apartado',
+                              style: const TextStyle(fontSize: 18),
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.arrow_drop_down_circle),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ApuntesPage(
+                                    tema: _tema,
+                                    apartado: apartado,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
                     Center(
@@ -269,7 +303,6 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                               child: IconButton(
                                 icon: const Icon(Icons.edit, color: Colors.white),
                                 onPressed: () {
-                                  // Acción para iniciar una lección
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
