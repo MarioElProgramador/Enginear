@@ -1,16 +1,18 @@
-# enginear
+# Enginear - Aplicación Educativa Matemática
 
-Mario's TFG application.
+Este proyecto es una aplicación educativa matemática desarrollada en Flutter y Dart. Utiliza inteligencia artificial generativa de Google (Gemini) para proporcionar una experiencia de aprendizaje interactiva y personalizada.
 
-## Getting Started
+## Características
 
-This project is a starting point for a Flutter application.
+- **Selección de Cursos**: Los usuarios pueden seleccionar entre una variedad de cursos, incluyendo álgebra lineal, geometría, cálculo 1, cálculo 2, y más.
+- **Generación de Ecuaciones**: La aplicación puede generar ecuaciones matemáticas utilizando una API de inteligencia artificial generativa.
+- **Interfaz de Usuario Interactiva**: La aplicación tiene una interfaz de usuario intuitiva y fácil de usar, con secciones claramente definidas para diferentes temas.
 
-A few resources to get you started if this is your first Flutter project:
+## Instalación
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Para instalar y ejecutar este proyecto, necesitarás tener instalado Flutter y Dart en tu sistema. A continuación, puedes clonar este repositorio y ejecutar `flutter run` en la raíz del proyecto.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+git clone https://github.com/<your-github-username>/<your-repo-name>
+cd <your-repo-name>
+flutter run
