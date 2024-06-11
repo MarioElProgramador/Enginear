@@ -8,10 +8,10 @@ class ApuntesPage extends StatefulWidget {
   final String apartado;
 
   const ApuntesPage({
-    Key? key,
+    super.key,
     required this.tema,
     required this.apartado,
-  }) : super(key: key);
+  });
 
   @override
   _ApuntesPageState createState() => _ApuntesPageState();
@@ -97,9 +97,9 @@ class MessageWidget extends StatelessWidget {
   final String text;
 
   const MessageWidget({
-    Key? key,
+    super.key,
     required this.text,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +122,7 @@ class MessageWidget extends StatelessWidget {
               selectable: true,
               data: text,
               styleSheet: MarkdownStyleSheet(
-                p: TextStyle(
+                p: const TextStyle(
                   color: Colors.black87,
                 ),
               ),

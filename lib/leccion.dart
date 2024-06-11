@@ -1,111 +1,91 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'pagina_principal.dart';
-import 'chatbot.dart';
 import 'pagina_felicitaciones.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'chatbot.dart';
+import 'generative_ai.dart';
+import 'respuesta_ai.dart';
 
 class LeccionPage extends StatefulWidget {
+  final String materia;
+  final String asignatura;
   final String tema;
-  final String apartado;
-  final VoidCallback onLeccionCompleta;
+  final String subapartado;
+  final int vidas;
+  final int divisas;
+  final Function onLeccionCompleta;
 
   const LeccionPage({
-    Key? key,
+    required this.materia,
+    required this.asignatura,
     required this.tema,
-    required this.apartado,
+    required this.subapartado,
+    required this.vidas,
+    required this.divisas,
     required this.onLeccionCompleta,
-  }) : super(key: key);
+  });
 
   @override
-  _LeccionPageState createState() => _LeccionPageState();
+  State<StatefulWidget> createState() => _LeccionPageState();
 }
 
 class _LeccionPageState extends State<LeccionPage> {
-  late final GenerativeModel _model;
-  late final ChatSession _chat;
   Map<String, dynamic>? _currentExercise;
   String? _respuestaUsuario;
-  int _vidas = 0;
-  int _divisas = 0;
   bool _loading = false;
+  late int _divisas;
+  late int _vidas;
 
   @override
   void initState() {
     super.initState();
-    if (dotenv.isInitialized) {
-      _model = GenerativeModel(
-        model: "gemini-pro",
-        apiKey: dotenv.env['API_KEY']!,
-      );
-      _chat = _model.startChat();
-    } else {
-      throw Exception('Dotenv is not initialized. Make sure to load dotenv in main.dart');
-    }
-    _cargarVidasYDivisas();
+    _divisas = widget.divisas;
+    _vidas = widget.vidas;
     _generarEjercicio();
   }
 
-  Future<void> _cargarVidasYDivisas() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _vidas = prefs.getInt('vidas') ?? 5;
-      _divisas = prefs.getInt('divisas') ?? 0;
-    });
-  }
-
-  Future<void> _guardarDivisas() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('divisas', _divisas);
-  }
-
   Future<void> _generarEjercicio() async {
-    setState(() {
-      _loading = true;
-    });
+    setState(() => _loading = true);
 
-    try {
-      final prompt = "Genera un ejercicio con respuesta para el tema '${widget.tema}' y el apartado '${widget.apartado}'.";
-      final userMessage = Content.text(prompt);
-      final response = await _chat.sendMessage(userMessage);
-      final text = response.text;
-      if (text != null) {
-        final parts = text.split("**Respuesta:**");
-        if (parts.length == 2) {
-          setState(() {
-            _currentExercise = {
-              'pregunta': parts[0].trim(),
-              'respuesta': parts[1].trim()
-            };
-          });
-        } else {
-          setState(() {
-            _currentExercise = null;
-          });
-        }
-      } else {
-        setState(() {
-          _currentExercise = null;
-        });
-      }
-    } catch (e) {
-      debugPrint(e.toString());
-    } finally {
+    final ejercicio = await generarEjercicio(widget.tema, widget.subapartado);
+    if (ejercicio != null) {
       setState(() {
-        _loading = false;
+        _currentExercise = ejercicio;
+      });
+    } else {
+      setState(() {
+        _currentExercise = {'tipo': 'error', 'contenido': 'No se pudo generar el ejercicio.'};
       });
     }
+
+    setState(() => _loading = false);
   }
 
   void _completarEjercicio() async {
-    await _actualizarRacha();
-    widget.onLeccionCompleta();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const FelicitacionesPage()),
-    );
+    if (_currentExercise == null) return;
+
+    final pregunta = _currentExercise!['contenido'].split("Respuesta:")[0].trim();
+    final respuestaUsuario = _respuestaUsuario?.trim() ?? '';
+
+    // Verificamos la respuesta del usuario utilizando la API
+    final bool respuestaCorrecta = await RespuestaApi.verificarRespuesta(pregunta, respuestaUsuario);
+
+    // Si la respuesta es correcta, completamos el ejercicio y avanzamos a la página de felicitaciones
+    if (respuestaCorrecta) {
+      await _actualizarRacha();
+      widget.onLeccionCompleta();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FelicitacionesPage()),
+      );
+    } else {
+      // Si la respuesta es incorrecta, restamos una vida y mostramos un mensaje de error
+      _restarVida();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Respuesta incorrecta. Inténtalo de nuevo.')),
+      );
+    }
   }
 
   Future<void> _actualizarRacha() async {
@@ -167,8 +147,28 @@ class _LeccionPageState extends State<LeccionPage> {
     );
   }
 
+  Future<void> _guardarDivisas() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('divisas', _divisas);
+  }
+
+  Future<void> _guardarVidas() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('vidas', _vidas);
+  }
+
+  void _restarVida() {
+    setState(() {
+      _vidas--;
+    });
+    _guardarVidas();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final buttonSize = screenWidth > 600 ? 200.0 : 150.0;
+
     return Scaffold(
       appBar: AppBar(
         leading: TextButton(
@@ -202,51 +202,99 @@ class _LeccionPageState extends State<LeccionPage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_loading)
-              const Center(child: CircularProgressIndicator())
-            else if (_currentExercise == null)
-              const Center(child: Text('No se pudieron cargar los ejercicios'))
-            else ...[
-                MarkdownBody(
-                  data: _currentExercise!['pregunta'],
-                  styleSheet: MarkdownStyleSheet(
-                    p: TextStyle(fontSize: 18),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _respuestaUsuario = value;
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Tu respuesta',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_respuestaUsuario == _currentExercise!['respuesta']) {
-                      _completarEjercicio();
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Respuesta incorrecta')),
-                      );
-                    }
-                  },
-                  child: const Text('Verificar'),
-                ),
-              ],
-          ],
-        ),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_loading)
+                    const Center(child: CircularProgressIndicator())
+                  else if (_currentExercise == null)
+                    const Center(child: Text('No se pudieron cargar los ejercicios'))
+                  else ...[
+                      MarkdownBody(
+                        data: _currentExercise!['contenido'].split("Respuesta:")[0].trim(),
+                        styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(fontSize: 18),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      if (_currentExercise!['tipo'] == 'respuesta_corta') ...[
+                        TextField(
+                          onChanged: (value) {
+                            setState(() {
+                              _respuestaUsuario = value;
+                            });
+                          },
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Tu respuesta',
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ] else if (_currentExercise!['tipo'] == 'seleccion_multiple') ...[
+                        ..._generateMultipleChoiceOptions(_currentExercise!['contenido']),
+                        const SizedBox(height: 20),
+                      ] else if (_currentExercise!['tipo'] == 'rellenar_campos') ...[
+                        TextField(
+                          onChanged: (value) {
+                            setState(() {
+                              _respuestaUsuario = value;
+                            });
+                          },
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Tu respuesta',
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ]
+                    ],
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: SizedBox(
+              width: buttonSize,
+              child: ElevatedButton(
+                onPressed: _completarEjercicio,
+                child: const Text('Verificar'),
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  List<Widget> _generateMultipleChoiceOptions(String content) {
+    final parts = content.split("Opciones:");
+    final optionsText = parts[1].trim().split("\n").where((line) => line.trim().isNotEmpty).toList();
+
+    final List<String> options = [];
+    for (var option in optionsText) {
+      if (option.trim().startsWith("(")) {
+        options.add(option.trim());
+      }
+    }
+
+    return options.map((option) {
+      return RadioListTile<String>(
+        title: Text(option),
+        value: option,
+        groupValue: _respuestaUsuario,
+        onChanged: (value) {
+          setState(() {
+            _respuestaUsuario = value;
+          });
+        },
+      );
+    }).toList();
   }
 }

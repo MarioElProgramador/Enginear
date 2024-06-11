@@ -131,7 +131,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,  // Desactivar el botón de retroceso predeterminado
+        automaticallyImplyLeading: false,
         titleSpacing: 0.0,
         title: GestureDetector(
           onTap: () async {
@@ -227,7 +227,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.arrow_drop_down_circle),
+                  icon: const Icon(Icons.arrow_forward), // Cambio de icono aquí
                   onPressed: () async {
                     final result = await Navigator.push(
                       context,
@@ -273,7 +273,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.arrow_drop_down_circle),
+                            icon: const Icon(Icons.menu_book),
                             onPressed: () {
                               Navigator.push(
                                 context,
@@ -307,8 +307,12 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => LeccionPage(
+                                        materia: _materia,
+                                        asignatura: _asignatura,
                                         tema: _tema,
-                                        apartado: apartado,
+                                        subapartado: apartado,
+                                        vidas: _vidas,
+                                        divisas: _divisas,
                                         onLeccionCompleta: _onLeccionCompleta,
                                       ),
                                     ),
