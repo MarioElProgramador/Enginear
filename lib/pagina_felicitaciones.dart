@@ -31,8 +31,10 @@ class _FelicitacionesPageState extends State<FelicitacionesPage> {
   Future<void> _asignarRecompensas() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
+    // Obtener el valor actual de las divisas o inicializarlo a 150 si es la primera vez
+    int divisas = prefs.getInt('divisas') ?? 150;
+
     // Actualizar divisas
-    int divisas = prefs.getInt('divisas') ?? 0;
     divisas += 20;
     await prefs.setInt('divisas', divisas);
 
@@ -80,9 +82,9 @@ class _FelicitacionesPageState extends State<FelicitacionesPage> {
                       style: TextStyle(fontSize: 16),
                     ),
                     const SizedBox(height: 5),
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Text(
                           '+20 divisas',
                           style: TextStyle(fontSize: 16),
@@ -95,9 +97,9 @@ class _FelicitacionesPageState extends State<FelicitacionesPage> {
                       ],
                     ),
                     const SizedBox(height: 5),
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Text(
                           'Racha aumentada!',
                           style: TextStyle(fontSize: 16),

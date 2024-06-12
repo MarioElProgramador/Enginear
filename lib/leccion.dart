@@ -16,7 +16,7 @@ class LeccionPage extends StatefulWidget {
   final int divisas;
   final Function onLeccionCompleta;
 
-  const LeccionPage({
+  const LeccionPage({super.key, 
     required this.materia,
     required this.asignatura,
     required this.tema,
@@ -257,14 +257,16 @@ class _LeccionPageState extends State<LeccionPage> {
               ),
             ),
           ),
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: SizedBox(
-              width: buttonSize,
-              child: ElevatedButton(
-                onPressed: _completarEjercicio,
-                child: const Text('Verificar'),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SizedBox(
+                width: buttonSize,
+                child: ElevatedButton(
+                  onPressed: _completarEjercicio,
+                  child: const Text('Verificar'),
+                ),
               ),
             ),
           ),

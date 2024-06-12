@@ -29,15 +29,18 @@ class _SeleccionCursoState extends State<SeleccionCurso> {
       ),
       body: ListView(
         children: _expanded.keys.map((materia) {
-          return ExpansionTile(
-            title: Text(materia),
-            initiallyExpanded: _expanded[materia]!,
-            onExpansionChanged: (bool expanded) {
-              setState(() {
-                _expanded[materia] = expanded;
-              });
-            },
-            children: _buildAsignaturaList(materia),
+          return Container(
+            color: Colors.blue[50], // Cambia este color para un fondo más suave para las materias
+            child: ExpansionTile(
+              title: Text(materia),
+              initiallyExpanded: _expanded[materia]!,
+              onExpansionChanged: (bool expanded) {
+                setState(() {
+                  _expanded[materia] = expanded;
+                });
+              },
+              children: _buildAsignaturaList(materia),
+            ),
           );
         }).toList(),
       ),
@@ -47,26 +50,29 @@ class _SeleccionCursoState extends State<SeleccionCurso> {
   List<Widget> _buildAsignaturaList(String materia) {
     List<String> asignaturas = materias[materia]?.keys.toList() ?? [];
     return asignaturas.map((asignatura) {
-      return ListTile(
-        title: Text(asignatura),
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SeleccionTema(
-                materia: materia,
-                asignatura: asignatura,
+      return Container(
+        color: Colors.white, // Asegura que los apartados tengan fondo blanco
+        child: ListTile(
+          title: Text(asignatura),
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SeleccionTema(
+                  materia: materia,
+                  asignatura: asignatura,
+                ),
               ),
-            ),
-          );
-          if (result != null && result['tema'] != null) {
-            Navigator.pop(context, {
-              'materia': materia,
-              'asignatura': asignatura,
-              'tema': result['tema'],
-            });
-          }
-        },
+            );
+            if (result != null && result['tema'] != null) {
+              Navigator.pop(context, {
+                'materia': materia,
+                'asignatura': asignatura,
+                'tema': result['tema'],
+              });
+            }
+          },
+        ),
       );
     }).toList();
   }

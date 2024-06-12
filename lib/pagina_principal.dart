@@ -39,7 +39,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
       _materia = prefs.getString('materia') ?? "Materia";
       _asignatura = prefs.getString('asignatura') ?? "Asignatura";
       _tema = prefs.getString('tema') ?? "Tema";
-      _divisas = prefs.getInt('divisas') ?? 150;
+      _divisas = prefs.getInt('divisas') ?? 150; // Cambio aquí
       _vidas = prefs.getInt('vidas') ?? 5;
     });
     _verificarActualizacion();
@@ -356,8 +356,12 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   }
 
   List<String> _getApartados() {
-    Map<String, List<String>>? temas = materias[_materia]?[_asignatura];
-    List<String> apartados = temas?[_tema] ?? [];
-    return apartados;
+    if (materias[_materia] != null && materias[_materia]![_asignatura] != null) {
+      Map<String, List<String>> temas = materias[_materia]![_asignatura]!;
+      if (temas.containsKey(_tema)) {
+        return temas[_tema]!;
+      }
+    }
+    return [];
   }
 }

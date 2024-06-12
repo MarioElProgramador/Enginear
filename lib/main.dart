@@ -16,6 +16,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white, // Establece el color de fondo a blanco puro
       ),
       home: const LoadingScreen(), // Pantalla de carga
     );

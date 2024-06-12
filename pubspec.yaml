@@ -42,8 +42,11 @@ dependencies:
   cupertino_icons: ^1.0.2
   confetti: ^0.7.0
 
+
   http: any
+
 dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
 
@@ -56,6 +59,11 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/images/android-chrome-144x144.png"
 
 # The following section is specific to Flutter packages.
 flutter:
