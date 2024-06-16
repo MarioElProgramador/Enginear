@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:enginear/data_structure.dart';
+import 'inf_appbar.dart';
 
 class SeleccionTema extends StatelessWidget {
   final String materia;
@@ -28,6 +29,7 @@ class SeleccionTema extends StatelessWidget {
           },
         ),
       ),
+      bottomNavigationBar: InfAppBar(selectedIndex: 1),
     );
   }
 }

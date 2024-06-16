@@ -1,7 +1,9 @@
+import 'package:enginear/pagina_principal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'inf_appbar.dart';
 
 class Chatbot extends StatefulWidget {
   const Chatbot({super.key});
@@ -17,6 +19,7 @@ class _ChatbotState extends State<Chatbot> {
   final ScrollController _scrollController = ScrollController();
   bool _loading = false;
   final List<Map<String, dynamic>> _chatHistory = [];
+  int _selectedIndex = 0; // Índice de la pestaña Chatbot
 
   @override
   void initState() {
@@ -40,6 +43,14 @@ class _ChatbotState extends State<Chatbot> {
     });
   }
 
+  void _goToMainPage() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => PaginaPrincipal()),
+          (Route<dynamic> route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     bool hasApiKey = dotenv.env['API_KEY'] != null && dotenv.env['API_KEY']!.isNotEmpty;
@@ -47,6 +58,10 @@ class _ChatbotState extends State<Chatbot> {
       appBar: AppBar(
         title: const Text("Chatbot de Enginear"),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _goToMainPage,
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -132,6 +147,7 @@ class _ChatbotState extends State<Chatbot> {
           ],
         ),
       ),
+      bottomNavigationBar: InfAppBar(selectedIndex: _selectedIndex),
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:confetti/confetti.dart';
@@ -13,6 +14,7 @@ class FelicitacionesPage extends StatefulWidget {
 class _FelicitacionesPageState extends State<FelicitacionesPage> {
   bool _recompensasAsignadas = false;
   late ConfettiController _confettiController;
+  int _expGanada = 0; // Variable para almacenar la experiencia ganada
 
   @override
   void initState() {
@@ -43,6 +45,12 @@ class _FelicitacionesPageState extends State<FelicitacionesPage> {
     contadorFuego++;
     await prefs.setInt('contadorFuego', contadorFuego);
     await prefs.setBool('fuegoEncendido', true);
+
+    // Asignar puntos de experiencia aleatorios entre 10 y 30
+    _expGanada = Random().nextInt(21) + 10; // Genera un número entre 10 y 30 de experiencia
+    int exp = prefs.getInt('exp') ?? 0;
+    exp += _expGanada;
+    await prefs.setInt('exp', exp);
 
     setState(() {
       _recompensasAsignadas = true;
@@ -93,6 +101,21 @@ class _FelicitacionesPageState extends State<FelicitacionesPage> {
                         Icon(
                           Icons.attach_money,
                           color: Colors.green,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '+$_expGanada exp',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(width: 5),
+                        const Icon(
+                          Icons.star,
+                          color: Colors.blue,
                         ),
                       ],
                     ),

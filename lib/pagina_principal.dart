@@ -6,6 +6,7 @@ import 'package:enginear/seleccion_tema.dart';
 import 'package:enginear/leccion.dart';
 import 'chatbot.dart';
 import 'apuntes.dart';
+import 'inf_appbar.dart'; // Importar InfAppBar
 
 class PaginaPrincipal extends StatefulWidget {
   const PaginaPrincipal({super.key});
@@ -23,6 +24,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   String _tema = "Tema";
   int _divisas = 150;
   int _vidas = 5;
+  int _selectedIndex = 1;
 
   @override
   void initState() {
@@ -39,7 +41,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
       _materia = prefs.getString('materia') ?? "Materia";
       _asignatura = prefs.getString('asignatura') ?? "Asignatura";
       _tema = prefs.getString('tema') ?? "Tema";
-      _divisas = prefs.getInt('divisas') ?? 150; // Cambio aquí
+      _divisas = prefs.getInt('divisas') ?? 150;
       _vidas = prefs.getInt('vidas') ?? 5;
     });
     _verificarActualizacion();
@@ -96,25 +98,6 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   int _getTemaIndex() {
     List<String> temas = materias[_materia]?[_asignatura]?.keys.toList() ?? [];
     return temas.indexOf(_tema) + 1;
-  }
-
-  int _selectedIndex = 1;
-
-  void _onItemTapped(int index) {
-    if (index == 1) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const PaginaPrincipal()),
-      );
-    } else if (index == 2) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const Chatbot()),
-      );
-    }
-    setState(() {
-      _selectedIndex = index;
-    });
   }
 
   void _onLeccionCompleta() {
@@ -227,7 +210,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.arrow_forward), // Cambio de icono aquí
+                  icon: const Icon(Icons.arrow_forward),
                   onPressed: () async {
                     final result = await Navigator.push(
                       context,
@@ -332,26 +315,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.lightbulb),
-            label: '',
-          ),
-        ],
-        iconSize: isMobile ? 28.0 : 40.0,
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
-        onTap: _onItemTapped,
-      ),
+      bottomNavigationBar: InfAppBar(selectedIndex: _selectedIndex),
     );
   }
 

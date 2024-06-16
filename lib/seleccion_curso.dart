@@ -1,8 +1,7 @@
-// lib/seleccion_curso.dart
-
 import 'package:flutter/material.dart';
 import 'package:enginear/data_structure.dart';
 import 'package:enginear/seleccion_tema.dart';
+import 'inf_appbar.dart';
 
 class SeleccionCurso extends StatefulWidget {
   const SeleccionCurso({super.key});
@@ -12,8 +11,6 @@ class SeleccionCurso extends StatefulWidget {
 }
 
 class _SeleccionCursoState extends State<SeleccionCurso> {
-  String? _selectedMateria;
-  String? _selectedAsignatura;
 
   final Map<String, bool> _expanded = {
     'Matemáticas': false,
@@ -30,7 +27,7 @@ class _SeleccionCursoState extends State<SeleccionCurso> {
       body: ListView(
         children: _expanded.keys.map((materia) {
           return Container(
-            color: Colors.blue[50], // Cambia este color para un fondo más suave para las materias
+            color: Colors.blue[50],
             child: ExpansionTile(
               title: Text(materia),
               initiallyExpanded: _expanded[materia]!,
@@ -44,6 +41,7 @@ class _SeleccionCursoState extends State<SeleccionCurso> {
           );
         }).toList(),
       ),
+      bottomNavigationBar: InfAppBar(selectedIndex: 1),
     );
   }
 
@@ -51,7 +49,7 @@ class _SeleccionCursoState extends State<SeleccionCurso> {
     List<String> asignaturas = materias[materia]?.keys.toList() ?? [];
     return asignaturas.map((asignatura) {
       return Container(
-        color: Colors.white, // Asegura que los apartados tengan fondo blanco
+        color: Colors.white,
         child: ListTile(
           title: Text(asignatura),
           onTap: () async {
