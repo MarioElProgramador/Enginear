@@ -153,4 +153,3 @@ class _PerfilPageState extends State<PerfilPage> {
     );
   }
 }
-
