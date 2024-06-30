@@ -14,7 +14,7 @@ Enginear es una aplicación educativa matemática desarrollada en Flutter y Dart
 
 Para instalar y ejecutar este proyecto, necesitarás tener instalado Flutter y Dart en tu sistema. Sigue los pasos a continuación para clonar este repositorio y ejecutar la aplicación:
 
-1. Clona este repositorio:
+1. Clona este repositorio (reemplaza `<your-github-username>` y `<your-repo-name>` con tu propio nombre de usuario de GitHub y el nombre del repositorio):
 
     ```bash
     git clone https://github.com/<your-github-username>/<your-repo-name>
@@ -55,9 +55,19 @@ flutter build web --release
 
 Los archivos generados se encontrarán en el directorio build/web.
 
+### Windows 
+
+Para generar una build para la web en Windows, utiliza el siguiente comando:
+
+```bash
+flutter build web --release
+```
+
+El archivo ejecutable generado se encontrará en build/windows/runner/Release.
+
 ## API Key
 
-Importante: Por razones de seguridad, se ha borrado la API key usada para el proyecto. Para que funcionen los aspectos importantes de la aplicación, necesitarás obtener una API key de Google Cloud Platform o Google Vertex AI.
+**Importante:** Por razones de seguridad, se ha borrado la API key usada para el proyecto. Para que funcionen los aspectos importantes de la aplicación, necesitarás obtener una API key de Google Cloud Platform o Google Vertex AI.
 
 1. Obtén una API key de Google Cloud Platform o Google Vertex AI.
 
