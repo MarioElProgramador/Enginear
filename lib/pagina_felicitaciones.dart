@@ -40,11 +40,19 @@ class _FelicitacionesPageState extends State<FelicitacionesPage> {
     divisas += 20;
     await prefs.setInt('divisas', divisas);
 
-    // Actualizar racha de fuego
-    int contadorFuego = prefs.getInt('contadorFuego') ?? 0;
-    contadorFuego++;
-    await prefs.setInt('contadorFuego', contadorFuego);
-    await prefs.setBool('fuegoEncendido', true);
+    // Actualizar racha de fuego solo si el fuego está apagado
+    DateTime ahora = DateTime.now();
+    DateTime ultimaLeccionFecha = DateTime.parse(prefs.getString('ultimaLeccionFecha') ?? ahora.toString());
+    bool fuegoEncendido = prefs.getBool('fuegoEncendido') ?? false;
+
+    if (!fuegoEncendido && ahora.difference(ultimaLeccionFecha).inDays >= 1) {
+      int contadorFuego = prefs.getInt('contadorFuego') ?? 0;
+      contadorFuego++;
+      await prefs.setInt('contadorFuego', contadorFuego);
+      await prefs.setBool('fuegoEncendido', true);
+    }
+
+    await prefs.setString('ultimaLeccionFecha', ahora.toString());
 
     // Asignar puntos de experiencia aleatorios entre 10 y 30
     _expGanada = Random().nextInt(21) + 10; // Genera un número entre 10 y 30 de experiencia

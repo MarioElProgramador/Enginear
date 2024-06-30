@@ -25,6 +25,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
   int _divisas = 150;
   int _vidas = 5;
   int _selectedIndex = 1;
+  Map<String, List<bool>> _leccionesCompletadasPorApartado = {}; // Estado de lecciones completadas por apartado
 
   @override
   void initState() {
@@ -43,8 +44,22 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
       _tema = prefs.getString('tema') ?? "Tema";
       _divisas = prefs.getInt('divisas') ?? 150;
       _vidas = prefs.getInt('vidas') ?? 5;
+      // Cargar estado de lecciones completadas por apartado
+      _cargarLeccionesCompletadas(prefs);
     });
     _verificarActualizacion();
+  }
+
+  void _cargarLeccionesCompletadas(SharedPreferences prefs) {
+    for (int i = 0; i < 4; i++) {
+      for (String apartado in _getApartados()) {
+        bool completada = prefs.getBool('leccionCompletada_${apartado}_$i') ?? false;
+        if (_leccionesCompletadasPorApartado[apartado] == null) {
+          _leccionesCompletadasPorApartado[apartado] = [false, false, false, false];
+        }
+        _leccionesCompletadasPorApartado[apartado]![i] = completada;
+      }
+    }
   }
 
   bool _esFuegoEncendido(DateTime fecha) {
@@ -100,8 +115,14 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
     return temas.indexOf(_tema) + 1;
   }
 
-  void _onLeccionCompleta() {
+  void _onLeccionCompleta(String apartado, int leccionIndex) {
     _actualizarRacha();
+    setState(() {
+      _leccionesCompletadasPorApartado[apartado]![leccionIndex] = true;
+    });
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('leccionCompletada_${apartado}_$leccionIndex', true);
+    });
   }
 
   @override
@@ -284,7 +305,13 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.white),
+                                icon: Icon(
+                                  _leccionesCompletadasPorApartado[apartado] != null &&
+                                      _leccionesCompletadasPorApartado[apartado]![i]
+                                      ? Icons.check
+                                      : Icons.edit,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
@@ -296,7 +323,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
                                         subapartado: apartado,
                                         vidas: _vidas,
                                         divisas: _divisas,
-                                        onLeccionCompleta: _onLeccionCompleta,
+                                        onLeccionCompleta: () => _onLeccionCompleta(apartado, i), // Pasar apartado y índice de lección
                                       ),
                                     ),
                                   );

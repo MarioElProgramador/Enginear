@@ -2,7 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class RespuestaApi {
-  static Future<bool> verificarRespuesta(String pregunta, String respuestaUsuario) async {
+  static Future<bool> verificarRespuesta(String pregunta, String respuestaUsuario, String respuestaCorrecta) async {
     await dotenv.load(fileName: ".env");
     final apiKey = dotenv.env['API_KEY'];
 
@@ -20,6 +20,8 @@ Evaluate the user's response for the following question:
 Question: "$pregunta"
 
 User's Response: "$respuestaUsuario"
+
+Correct Answer: "$respuestaCorrecta"
 
 Reply with "correct" if the user's response is correct, otherwise reply with "incorrect".
 ''';
